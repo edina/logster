@@ -92,12 +92,12 @@ class DMMapLogster(LogsterParser):
 
         # Return a list of metrics objects
         return [
-            MetricObject("agcensus", (self.agcensus / self.duration), "Responses per sec"),
-            MetricObject("geology", (self.geology / self.duration), "Responses per sec"),
-            MetricObject("historic", (self.historic / self.duration), "Responses per sec"),
-            MetricObject("landuse", (self.landuse / self.duration), "Responses per sec"),
-            MetricObject("marine", (self.marine / self.duration), "Responses per sec"),
-            MetricObject("os", (self.os / self.duration), "Responses per sec"),
-            MetricObject("ukb", (self.ukb / self.duration), "Responses per sec"),
-            MetricObject("unknown", (self.unknown / self.duration), "Responses per sec"),
+            MetricObject("agcensus", (self.agcensus / (self.duration / 60.0) ), "Responses per sec"),
+            MetricObject("geology", (self.geology / (self.duration / 60.0) ), "Responses per sec"),
+            MetricObject("historic", (self.historic / (self.duration / 60.0) ), "Responses per sec"),
+            MetricObject("landuse", (self.landuse / (self.duration / 60.0) ), "Responses per sec"),
+            MetricObject("marine", (self.marine / (self.duration / 60.0) ), "Responses per sec"),
+            MetricObject("os", (self.os / (self.duration / 60.0) ), "Responses per sec"),
+            MetricObject("ukb", (self.ukb / (self.duration / 60.0) ), "Responses per sec"),
+            MetricObject("unknown", (self.unknown / (self.duration / 60.0) ), "Responses per sec"),
         ]
