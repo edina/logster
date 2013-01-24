@@ -53,15 +53,17 @@ import traceback
 
 from time import time
 from math import floor
+from os.path import expanduser
 
 # Local dependencies
 from logster.logster_helper import LogsterParsingException, LockingError
 
 # Globals
+home = expanduser("~")
 gmetric = "/usr/bin/gmetric"
 logtail = "/usr/sbin/logtail2"
-log_dir = "/var/log/logster"
-state_dir = "/var/run"
+log_dir = home + "/var/log/logster"
+state_dir = home + "/var/run"
 
 script_start_time = time()
 
