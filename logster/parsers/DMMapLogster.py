@@ -42,6 +42,7 @@ class DMMapLogster(LogsterParser):
         of the tasty bits we find in the log we are parsing.'''
         # TODO replace with a dict lookup
         self.agcensus = 0
+        self.ceh = 0
         self.geology = 0
         self.historic = 0
         self.landuse = 0
@@ -68,6 +69,8 @@ class DMMapLogster(LogsterParser):
 
             if (map_collection == 'agcencus'):
               self.agcensus += 1
+            if (map_collection == 'ceh'):
+              self.ceh += 1
             elif (map_collection == 'geology'):
               self.geology += 1
             elif (map_collection == 'historic'):
@@ -93,6 +96,7 @@ class DMMapLogster(LogsterParser):
         # Return a list of metrics objects
         return [
             MetricObject("agcensus", (self.agcensus / (self.duration / 60.0) ), "Responses per sec"),
+            MetricObject("ceh", (self.ceh / (self.duration / 60.0) ), "Responses per sec"),
             MetricObject("geology", (self.geology / (self.duration / 60.0) ), "Responses per sec"),
             MetricObject("historic", (self.historic / (self.duration / 60.0) ), "Responses per sec"),
             MetricObject("landuse", (self.landuse / (self.duration / 60.0) ), "Responses per sec"),
