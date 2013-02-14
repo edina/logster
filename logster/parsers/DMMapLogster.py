@@ -53,7 +53,7 @@ class DMMapLogster(LogsterParser):
         
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.reg = re.compile('.*mapserv.*map=mapfiles/(?P<mapcollection>\w+)/.*\.map.*')
+        self.reg = re.compile('.*mapserv.*map=mapfiles(/|%2F)(?P<mapcollection>\w+)(/|%2F).*\.map.*')
 
 
     def parse_line(self, line):
