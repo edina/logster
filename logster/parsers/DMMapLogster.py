@@ -40,20 +40,13 @@ class DMMapLogster(LogsterParser):
     def __init__(self, option_string=None):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
-        # TODO replace with a dict lookup
-        self.agcensus = 0
-        self.ceh = 0
-        self.geology = 0
-        self.historic = 0
-        self.landuse = 0
-        self.marine = 0
-        self.os = 0
-        self.ukb = 0
-        self.unknown = 0
+        self.mapserver_maps = {}
+        self.clive_maps = {}
         
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.reg = re.compile('.*mapserv.*map=mapfiles(/|%2F)(?P<mapcollection>\w+)(/|%2F).*\.map.*')
+        self.clive_reg = re.compile('.*clive/clive.*product=(?P<product>\w+)&.*')
 
 
     def parse_line(self, line):
@@ -62,46 +55,37 @@ class DMMapLogster(LogsterParser):
 
         # Apply regular expression to each line and extract interesting bits.
         regMatch = self.reg.match(line)
+        cliveRegMatch = self.clive_reg.match(line)
 
         if regMatch:
             linebits = regMatch.groupdict()
-            map_collection = linebits['mapcollection']
+            map_collection = "ms_" + linebits['mapcollection']
 
-            if (map_collection == 'agcencus'):
-              self.agcensus += 1
-            if (map_collection == 'ceh'):
-              self.ceh += 1
-            elif (map_collection == 'geology'):
-              self.geology += 1
-            elif (map_collection == 'historic'):
-              self.historic += 1
-            elif (map_collection == 'landuse'):
-              self.landuse += 1
-            elif (map_collection == 'marine'):
-              self.marine += 1
-            elif (map_collection == 'os'):
-              self.os += 1
-            elif (map_collection == 'ukb'):
-              self.ukb += 1
+            if map_collection in self.mapserver_maps:
+              self.mapserver_maps[map_collection] += 1
             else:
-              self.unknown += 1
+              self.mapserver_maps[map_collection] = 1
+
+        elif cliveRegMatch:
+          linebits = cliveRegMatch.groupdict()
+          product = "clive_" + linebits['product']
+
+          if product in self.clive_maps:
+            self.clive_maps[product] += 1
+          else:
+            self.clive_maps[product] = 1
         # ignore non-matching lines since our apache log is full of crap
-        # TODO: add clive test here
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration
+        self.duration = duration / 60.0
 
-        # Return a list of metrics objects
-        return [
-            MetricObject("agcensus", (self.agcensus / (self.duration / 60.0) ), "Responses per sec"),
-            MetricObject("ceh", (self.ceh / (self.duration / 60.0) ), "Responses per sec"),
-            MetricObject("geology", (self.geology / (self.duration / 60.0) ), "Responses per sec"),
-            MetricObject("historic", (self.historic / (self.duration / 60.0) ), "Responses per sec"),
-            MetricObject("landuse", (self.landuse / (self.duration / 60.0) ), "Responses per sec"),
-            MetricObject("marine", (self.marine / (self.duration / 60.0) ), "Responses per sec"),
-            MetricObject("os", (self.os / (self.duration / 60.0) ), "Responses per sec"),
-            MetricObject("ukb", (self.ukb / (self.duration / 60.0) ), "Responses per sec"),
-            MetricObject("unknown", (self.unknown / (self.duration / 60.0) ), "Responses per sec"),
-        ]
+        metricObjects = []
+        for product, count in self.mapserver_maps.items():
+          metricObjects.append( MetricObject( product, count / self.duration, "Responses per minute" ) )
+
+        for product, count in self.clive_maps.items():
+          metricObjects.append( MetricObject( product, count / self.duration, "Responses per minute" ) )
+
+        return metricObjects
