@@ -41,12 +41,14 @@ class DMMapLogster(LogsterParser):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
         self.mapserver_maps = {}
+        self.mapserver_resp = {}
         self.clive_maps = {}
+        self.clive_resp = {}
         
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.reg = re.compile('.*mapserv.*map=mapfiles(/|%2F)(?P<mapcollection>\w+)(/|%2F).*\.map.*')
-        self.clive_reg = re.compile('.*clive/clive.*product=(?P<product>\w+)&.*')
+        self.reg = re.compile('.*mapserv.*map=mapfiles(/|%2F)(?P<mapcollection>\w+)(/|%2F).*\.map.*Response: (?P<response>\d+).*')
+        self.clive_reg = re.compile('.*clive/clive.*product=(?P<product>\w+)&.*Response: (?P<response>\d+).*')
 
 
     def parse_line(self, line):
@@ -57,35 +59,50 @@ class DMMapLogster(LogsterParser):
         regMatch = self.reg.match(line)
         cliveRegMatch = self.clive_reg.match(line)
 
+        # FIXME don't like this duplicated code
         if regMatch:
             linebits = regMatch.groupdict()
             map_collection = "ms_" + linebits['mapcollection']
+            response = int(linebits['response']) / float(1000) # convert usec to msec
 
             if map_collection in self.mapserver_maps:
               self.mapserver_maps[map_collection] += 1
+              self.mapserver_resp[map_collection] += response
             else:
               self.mapserver_maps[map_collection] = 1
+              self.mapserver_resp[map_collection] = response
 
         elif cliveRegMatch:
           linebits = cliveRegMatch.groupdict()
           product = "clive_" + linebits['product'].lower();
+          response = int(linebits['response']) / float(1000) # convert usec to msec
 
           if product in self.clive_maps:
             self.clive_maps[product] += 1
+            self.clive_resp[product] += response
           else:
             self.clive_maps[product] = 1
+            self.clive_resp[product] = response
         # ignore non-matching lines since our apache log is full of crap
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration / 60.0
+        self.duration = duration / 60.0 # FIXME this is weird, as its always 1
 
         metricObjects = []
         for product, count in self.mapserver_maps.items():
-          metricObjects.append( MetricObject( product, count / self.duration, "Responses per minute" ) )
+          metricObjects.append( MetricObject( product + "_count", count / self.duration, "Responses per minute" ) )
+        for product, response in self.mapserver_resp.items():
+          count = self.mapserver_maps[product];
+          avg_response = response / float(count)
+          metricObjects.append( MetricObject( product + "_response", avg_response / self.duration, "Avg Response Time per minute" ) )
 
         for product, count in self.clive_maps.items():
-          metricObjects.append( MetricObject( product, count / self.duration, "Responses per minute" ) )
+          metricObjects.append( MetricObject( product + "_count", count / self.duration, "Responses per minute" ) )
+        for product, response in self.clive_resp.items():
+          count = self.clive_maps[product];
+          avg_response = response / float(count)
+          metricObjects.append( MetricObject( product + "_response", avg_response / self.duration, "Avg Response Time per minute" ) )
 
         return metricObjects
