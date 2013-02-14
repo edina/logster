@@ -68,7 +68,7 @@ class DMMapLogster(LogsterParser):
 
         elif cliveRegMatch:
           linebits = cliveRegMatch.groupdict()
-          product = "clive_" + linebits['product']
+          product = "clive_" + linebits['product'].lower();
 
           if product in self.clive_maps:
             self.clive_maps[product] += 1
