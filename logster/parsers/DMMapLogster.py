@@ -88,21 +88,19 @@ class DMMapLogster(LogsterParser):
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration / 60.0 # FIXME this is weird, as its always 1
-
         metricObjects = []
         for product, count in self.mapserver_maps.items():
-          metricObjects.append( MetricObject( product + "_count", count / self.duration, "Responses per minute" ) )
+          metricObjects.append( MetricObject( product + "_count", count, "Responses per minute" ) )
         for product, response in self.mapserver_resp.items():
           count = self.mapserver_maps[product];
           avg_response = response / float(count)
-          metricObjects.append( MetricObject( product + "_response", avg_response / self.duration, "Avg Response Time per minute" ) )
+          metricObjects.append( MetricObject( product + "_response", avg_response, "Avg Response Time per minute" ) )
 
         for product, count in self.clive_maps.items():
-          metricObjects.append( MetricObject( product + "_count", count / self.duration, "Responses per minute" ) )
+          metricObjects.append( MetricObject( product + "_count", count, "Responses per minute" ) )
         for product, response in self.clive_resp.items():
           count = self.clive_maps[product];
           avg_response = response / float(count)
-          metricObjects.append( MetricObject( product + "_response", avg_response / self.duration, "Avg Response Time per minute" ) )
+          metricObjects.append( MetricObject( product + "_response", avg_response, "Avg Response Time per minute" ) )
 
         return metricObjects

@@ -62,10 +62,9 @@ class DMWebLogster(LogsterParser):
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
-        self.duration = duration / 60.0 # FIXME this is weird, as its always 1
 
         metricObjects = []
-        metricObjects.append( MetricObject( "logins_count", self.logins / self.duration, "Logins per minute" ) )
-        metricObjects.append( MetricObject( "registrations_count", self.registrations / self.duration, "Registrations per minute" ) )
+        metricObjects.append( MetricObject( "logins_count", self.logins, "Logins per minute" ) )
+        metricObjects.append( MetricObject( "registrations_count", self.registrations, "Registrations per minute" ) )
 
         return metricObjects
