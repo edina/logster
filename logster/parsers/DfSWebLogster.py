@@ -37,10 +37,18 @@ class DfSWebLogster(LogsterParser):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
         self.cosmoLogins = 0
+        self.cosmoPrints = 0
+        self.cosmoMapproxies = 0
+        self.cosmoSaveBMs = 0
+        self.cosmoLoadBMs = 0
         
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regCosmoLogin = re.compile('.*GET /cosmo/login.*')
+        self.regCosmoPrint = re.compile('.*POST /cosmo/generatePrint.*')
+        self.regCosmoMapproxy = re.compile('.*/dfsmapproxy/wmsMap.*')
+        self.regCosmoSaveBMs = re.compile('.*/cosmo/saveBookmark.*')
+        self.regCosmoLoadBMs = re.compile('.*/cosmo/bookmarks.*')
 
 
     def parse_line(self, line):
@@ -49,9 +57,21 @@ class DfSWebLogster(LogsterParser):
 
         # Apply regular expression to each line and extract interesting bits.
         regCosmoLoginMatch = self.regCosmoLogin.match(line)
+        regCosmoPrintMatch = self.regCosmoPrint.match(line)
+        regCosmoMapproxiesMatch = self.regCosmoMapproxy.match(line)
+        regCosmoSaveBMsMatch = self.regCosmoSaveBMs.match(line)
+        regCosmoLoadBMsMatch = self.regCosmoLoadBMs.match(line)
 
         if regCosmoLoginMatch:
           self.cosmoLogins += 1
+        elif regCosmoPrintMatch:
+          self.cosmoPrints += 1
+        elif regCosmoMapproxiesMatch:
+          self.cosmoMapproxies += 1
+        elif regCosmoSaveBMsMatch:
+          self.cosmoSaveBMs += 1
+        elif regCosmoLoadBMsMatch:
+          self.cosmoLoadBMs += 1
         # ignore non-matching lines
 
     def get_state(self, duration):
@@ -59,6 +79,10 @@ class DfSWebLogster(LogsterParser):
         and return a list of metric objects.'''
 
         metricObjects = []
-        metricObjects.append( MetricObject( "cosmo_logins_count", self.cosmoLogins, "Schools Logins per minute" ) )
+        metricObjects.append( MetricObject( "logins_count", self.cosmoLogins, "Schools Logins per minute" ) )
+        metricObjects.append( MetricObject( "prints_count", self.cosmoPrints, "Schools Prints per minute" ) )
+        metricObjects.append( MetricObject( "mapproxies_count", self.cosmoMapproxies, "Schools Mapproxy Requests per minute" ) )
+        metricObjects.append( MetricObject( "bookmarks_save_count", self.cosmoSaveBMs, "Schools Save Bookmark Requests per minute" ) )
+        metricObjects.append( MetricObject( "bookmarks_load_count", self.cosmoLoadBMs, "Schools Load Bookmark Requests per minute" ) )
 
         return metricObjects
