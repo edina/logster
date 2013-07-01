@@ -31,7 +31,7 @@ import re
 from logster.logster_helper import MetricObject, LogsterParser
 from logster.logster_helper import LogsterParsingException
 
-class DMWebLogster(LogsterParser):
+class DfSWebLogster(LogsterParser):
 
     def __init__(self, option_string=None):
         '''Initialize any data structures or variables needed for keeping track
