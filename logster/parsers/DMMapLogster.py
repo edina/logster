@@ -42,14 +42,17 @@ class DMMapLogster(LogsterParser):
         of the tasty bits we find in the log we are parsing.'''
         self.mapserver_maps = {}
         self.mapserver_resp = {}
-        self.clive_maps = {}
-        self.clive_resp = {}
+        self.clive_maps_count = {}
+        self.clive_maps_resp = {}
+        self.clive_print_count = {}
+        self.clive_print_resp = {}
         
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.reg = re.compile('.*mapserv.*map=mapfiles(/|%2F)(?P<mapcollection>\w+)(/|%2F).*\.map.*Response: (?P<response>\d+).*', re.IGNORECASE)
         self.clive_reg = re.compile('.*clive/clive.*product=(?P<product>\w+)&.*Response: (?P<response>\d+).*', re.IGNORECASE)
-
+        self.clive_map_reg = re.compile('.*request=GetMap.*', re.IGNORECASE)
+        self.clive_print_reg = re.compile('.*request=PrintMap.*', re.IGNORECASE)
 
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
@@ -77,12 +80,23 @@ class DMMapLogster(LogsterParser):
           product = "clive_" + linebits['product'].lower();
           response = int(linebits['response']) / float(1000) # convert usec to msec
 
-          if product in self.clive_maps:
-            self.clive_maps[product] += 1
-            self.clive_resp[product] += response
-          else:
-            self.clive_maps[product] = 1
-            self.clive_resp[product] = response
+          isMap = self.clive_map_reg.match(line)
+          isPrint = self.clive_print_reg.match(line)
+
+          if isMap:
+            if product in self.clive_maps_count:
+              self.clive_maps_count[product] += 1
+              self.clive_maps_resp[product] += response
+            else:
+              self.clive_maps_count[product] = 1
+              self.clive_maps_resp[product] = response
+          elif isPrint:
+            if product in self.clive_print_count:
+              self.clive_print_count[product] += 1
+              self.clive_print_resp[product] += response
+            else:
+              self.clive_print_count[product] = 1
+              self.clive_print_resp[product] = response
         # ignore non-matching lines since our apache log is full of crap
 
     def get_state(self, duration):
@@ -96,11 +110,18 @@ class DMMapLogster(LogsterParser):
           avg_response = response / float(count)
           metricObjects.append( MetricObject( product + "_response", avg_response, "Avg Response Time per minute" ) )
 
-        for product, count in self.clive_maps.items():
-          metricObjects.append( MetricObject( product + "_count", count, "Responses per minute" ) )
-        for product, response in self.clive_resp.items():
-          count = self.clive_maps[product];
+        for product, count in self.clive_maps_count.items():
+          metricObjects.append( MetricObject( product + "_map_count", count, "Map Responses per minute" ) )
+        for product, response in self.clive_maps_resp.items():
+          count = self.clive_maps_count[product];
           avg_response = response / float(count)
-          metricObjects.append( MetricObject( product + "_response", avg_response, "Avg Response Time per minute" ) )
+          metricObjects.append( MetricObject( product + "_map_response", avg_response, "Map Avg Response Time per minute" ) )
+
+        for product, count in self.clive_print_count.items():
+          metricObjects.append( MetricObject( product + "_print_count", count, "Print Responses per minute" ) )
+        for product, response in self.clive_print_resp.items():
+          count = self.clive_print_count[product];
+          avg_response = response / float(count)
+          metricObjects.append( MetricObject( product + "_print_response", avg_response, "Print Avg Response Time per minute" ) )
 
         return metricObjects
