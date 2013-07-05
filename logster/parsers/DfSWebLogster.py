@@ -53,10 +53,10 @@ class DfSWebLogster(LogsterParser):
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regCosmoLogin = re.compile('.*GET /cosmo/login.*')
-        self.regCosmoPrint = re.compile('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+).*POST /cosmo/generatePrint.*')
-        self.regCosmoMapproxy = re.compile('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+).*/dfsmapproxy/wmsMap.*')
-        self.regCosmoSaveBMs = re.compile('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+).*/cosmo/saveBookmark.*')
-        self.regCosmoLoadBMs = re.compile('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+).*/cosmo/bookmarks.*')
+        self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /cosmo/generatePrint.*')
+        self.regCosmoMapproxy = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/dfsmapproxy/wmsMap.*')
+        self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/cosmo/saveBookmark.*')
+        self.regCosmoLoadBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/cosmo/bookmarks.*')
 
 
     def parse_line(self, line):
