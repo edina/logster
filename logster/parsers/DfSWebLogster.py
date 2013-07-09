@@ -41,14 +41,19 @@ class DfSWebLogster(LogsterParser):
         self.cosmoMapproxies = 0
         self.cosmoSaveBMs = 0
         self.cosmoLoadBMs = 0
+
+        self.printRespTimes = 0;
+        self.mapproxyRespTimes = 0;
+        self.saveBMRespTimes = 0;
+        self.loadBMRespTimes = 0;
         
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regCosmoLogin = re.compile('.*GET /cosmo/login.*')
-        self.regCosmoPrint = re.compile('.*POST /cosmo/generatePrint.*')
-        self.regCosmoMapproxy = re.compile('.*/dfsmapproxy/wmsMap.*')
-        self.regCosmoSaveBMs = re.compile('.*/cosmo/saveBookmark.*')
-        self.regCosmoLoadBMs = re.compile('.*/cosmo/bookmarks.*')
+        self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /cosmo/generatePrint.*')
+        self.regCosmoMapproxy = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/dfsmapproxy/wmsMap.*')
+        self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/cosmo/saveBookmark.*')
+        self.regCosmoLoadBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/cosmo/bookmarks.*')
 
 
     def parse_line(self, line):
@@ -66,12 +71,20 @@ class DfSWebLogster(LogsterParser):
           self.cosmoLogins += 1
         elif regCosmoPrintMatch:
           self.cosmoPrints += 1
+          linebits = regCosmoPrintMatch.groupdict()
+          self.printRespTimes += int(linebits['response']) / float(1000)
         elif regCosmoMapproxiesMatch:
           self.cosmoMapproxies += 1
+          linebits = regCosmoMapproxiesMatch.groupdict()
+          self.mapproxyRespTimes += int(linebits['response']) / float(1000)
         elif regCosmoSaveBMsMatch:
           self.cosmoSaveBMs += 1
+          linebits = regCosmoSaveBMsMatch.groupdict()
+          self.saveBMRespTimes += int(linebits['response']) / float(1000)
         elif regCosmoLoadBMsMatch:
           self.cosmoLoadBMs += 1
+          linebits = regCosmoLoadBMsMatch.groupdict()
+          self.loadBMRespTimes += int(linebits['response']) / float(1000)
         # ignore non-matching lines
 
     def get_state(self, duration):
@@ -84,5 +97,11 @@ class DfSWebLogster(LogsterParser):
         metricObjects.append( MetricObject( "mapproxies_count", self.cosmoMapproxies, "Schools Mapproxy Requests per minute" ) )
         metricObjects.append( MetricObject( "bookmarks_save_count", self.cosmoSaveBMs, "Schools Save Bookmark Requests per minute" ) )
         metricObjects.append( MetricObject( "bookmarks_load_count", self.cosmoLoadBMs, "Schools Load Bookmark Requests per minute" ) )
+        
+        '''Response times'''
+        metricObjects.append( MetricObject( "prints_response", self.printRespTimes / float(self.cosmoPrints), "Avg Response Time per minute" ) )
+        metricObjects.append( MetricObject( "mapproxies_response", self.mapproxyRespTimes / float(self.cosmoMapproxies), "Avg Response Time per minute" ) )
+        metricObjects.append( MetricObject( "bookmarks_save_response", self.saveBMRespTimes / float(self.cosmoSaveBMs), "Avg Response Time per minute" ) )
+        metricObjects.append( MetricObject( "bookmarks_load_response", self.loadBMRespTimes / float(self.cosmoLoadBMs), "Avg Response Time per minute" ) )
 
         return metricObjects
