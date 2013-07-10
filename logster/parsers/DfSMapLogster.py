@@ -60,17 +60,17 @@ class DfSMapLogster(LogsterParser):
         object's state variables. Takes a single argument, the line to be parsed.'''
 
         # Apply regular expression to each line and extract interesting bits.
-        mapservRegMatch = self.reg.match(line)
+        mapservRegMatch = self.mapservReg.match(line)
         cliveRegMatch = self.cliveReg.match(line)
         mapstreamRegMatch = self.mapstreamReg.match(line)
 
         # FIXME don't like this duplicated code
         if mapservRegMatch:
-            linebits = regMatch.groupdict()
+            linebits = mapservRegMatch.groupdict()
             mapCollection = "ms_" + linebits['mapcollection']
             response = int(linebits['response']) / float(1000) # convert usec to msec
 
-            if map_collection in self.mapserverMaps:
+            if mapCollection in self.mapserverMaps:
               self.mapserverMaps[mapCollection] += 1
               self.mapserverResp[mapCollection] += response
             else:
@@ -99,8 +99,10 @@ class DfSMapLogster(LogsterParser):
 
         metricObjects.append( MetricObject( "clive_print_count", self.clivePrints, "Clive Prints per minute" ) )
         metricObjects.append( MetricObject( "mapstream_wms_count", self.mapstreamWMSs, "Mapstream WMSs per minute" ) )
-        
-        metricObjects.append( MetricObject( "clive_print_response", self.clivePrintRespTimes / float(self.clivePrints), "Avg Response Time per minute" ) )
-        metricObjects.append( MetricObject( "mapstream_wms_response", self.mapstreamWMSRespTimes / float(self.mapstreamWMSs), "Avg Response Time per minute" ) )
+
+        if self.clivePrints > 0:
+          metricObjects.append( MetricObject( "clive_print_response", self.clivePrintRespTimes / float(self.clivePrints), "Avg Response Time per minute" ) )
+        if self.mapstreamWMSs > 0:
+          metricObjects.append( MetricObject( "mapstream_wms_response", self.mapstreamWMSRespTimes / float(self.mapstreamWMSs), "Avg Response Time per minute" ) )
 
         return metricObjects
