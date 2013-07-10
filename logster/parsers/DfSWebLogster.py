@@ -99,9 +99,13 @@ class DfSWebLogster(LogsterParser):
         metricObjects.append( MetricObject( "bookmarks_load_count", self.cosmoLoadBMs, "Schools Load Bookmark Requests per minute" ) )
         
         '''Response times'''
-        metricObjects.append( MetricObject( "prints_response", self.printRespTimes / float(self.cosmoPrints), "Avg Response Time per minute" ) )
-        metricObjects.append( MetricObject( "mapproxies_response", self.mapproxyRespTimes / float(self.cosmoMapproxies), "Avg Response Time per minute" ) )
-        metricObjects.append( MetricObject( "bookmarks_save_response", self.saveBMRespTimes / float(self.cosmoSaveBMs), "Avg Response Time per minute" ) )
-        metricObjects.append( MetricObject( "bookmarks_load_response", self.loadBMRespTimes / float(self.cosmoLoadBMs), "Avg Response Time per minute" ) )
+        if self.cosmoPrints > 0:
+          metricObjects.append( MetricObject( "prints_response", self.printRespTimes / float(self.cosmoPrints), "Avg Response Time per minute" ) )
+        if self.cosmoMapproxies > 0:
+          metricObjects.append( MetricObject( "mapproxies_response", self.mapproxyRespTimes / float(self.cosmoMapproxies), "Avg Response Time per minute" ) )
+        if self.cosmoSaveBMs > 0:
+          metricObjects.append( MetricObject( "bookmarks_save_response", self.saveBMRespTimes / float(self.cosmoSaveBMs), "Avg Response Time per minute" ) )
+        if self.cosmoLoadBMs > 0:
+          metricObjects.append( MetricObject( "bookmarks_load_response", self.loadBMRespTimes / float(self.cosmoLoadBMs), "Avg Response Time per minute" ) )
 
         return metricObjects
