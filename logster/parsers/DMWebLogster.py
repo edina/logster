@@ -38,11 +38,11 @@ class DMWebLogster(LogsterParser):
         of the tasty bits we find in the log we are parsing.'''
         self.logins = 0
         self.registrations = 0
-        
+
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regLogin = re.compile('.*GET /digimap/login.*')
-        self.regRegister = re.compile('.*POST /digimap/register.*')
+        self.regRegister = re.compile('.*POST /digimap/registrations/register-user.*')
 
 
     def parse_line(self, line):
