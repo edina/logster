@@ -38,11 +38,13 @@ class DMWebLogster(LogsterParser):
         of the tasty bits we find in the log we are parsing.'''
         self.logins = 0
         self.registrations = 0
+        self.downloads = 0
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regLogin = re.compile('.*GET /digimap/login.*')
         self.regRegister = re.compile('.*POST /digimap/registrations/register-user.*')
+        self.regDownloads = re.compile('.*POST /datadownload/submitorder.*')
 
 
     def parse_line(self, line):
@@ -52,11 +54,14 @@ class DMWebLogster(LogsterParser):
         # Apply regular expression to each line and extract interesting bits.
         regLoginMatch = self.regLogin.match(line)
         regRegisterMatch = self.regRegister.match(line)
+        regDownloadMatch = self.regDownloads.match(line)
 
         if regLoginMatch:
           self.logins += 1
         elif regRegisterMatch:
           self.registrations += 1
+        elif regDownloadMatch:
+          self.downloads += 1
         # ignore non-matching lines
 
     def get_state(self, duration):
@@ -66,5 +71,6 @@ class DMWebLogster(LogsterParser):
         metricObjects = []
         metricObjects.append( MetricObject( "logins_count", self.logins, "Logins per minute" ) )
         metricObjects.append( MetricObject( "registrations_count", self.registrations, "Registrations per minute" ) )
+        metricObjects.append( MetricObject( "download_submit_count", self.downloads, "Download Submits per minute" ) )
 
         return metricObjects
