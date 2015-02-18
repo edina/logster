@@ -46,14 +46,14 @@ class DfSWebLogster(LogsterParser):
         self.mapproxyRespTimes = 0;
         self.saveBMRespTimes = 0;
         self.loadBMRespTimes = 0;
-        
+
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.regCosmoLogin = re.compile('.*GET /cosmo/login.*')
-        self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /cosmo/generatePrint.*')
+        self.regCosmoLogin = re.compile('.*GET /login.*')
+        self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfs/cosmo-print.*')
         self.regCosmoMapproxy = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/mapproxy/wmsMap.*')
-        self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/cosmo/saveBookmark.*')
-        self.regCosmoLoadBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/cosmo/bookmarks.*')
+        self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfs/cosmo-my-maps.*')
+        self.regCosmoLoadBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*GET /dfs/cosmo-get-my-map.*')
 
 
     def parse_line(self, line):
@@ -97,7 +97,7 @@ class DfSWebLogster(LogsterParser):
         metricObjects.append( MetricObject( "mapproxies_count", self.cosmoMapproxies, "Schools Mapproxy Requests per minute" ) )
         metricObjects.append( MetricObject( "bookmarks_save_count", self.cosmoSaveBMs, "Schools Save Bookmark Requests per minute" ) )
         metricObjects.append( MetricObject( "bookmarks_load_count", self.cosmoLoadBMs, "Schools Load Bookmark Requests per minute" ) )
-        
+
         '''Response times'''
         if self.cosmoPrints > 0:
           metricObjects.append( MetricObject( "prints_response", self.printRespTimes / float(self.cosmoPrints), "Avg Response Time per minute" ) )
