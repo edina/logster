@@ -52,7 +52,9 @@ class DMWebLogster(LogsterParser):
         object's state variables. Takes a single argument, the line to be parsed.'''
 
         # Apply regular expression to each line and extract interesting bits.
-        regLoginMatch = self.regLogin.match(line)
+        regLoginMatch = False
+        if "MONITOR" not in line and "idp.edina.ac.uk" not in line:
+          regLoginMatch = self.regLogin.match(line)
         regRegisterMatch = self.regRegister.match(line)
         regDownloadMatch = self.regDownloads.match(line)
 
