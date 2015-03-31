@@ -42,8 +42,8 @@ class DMWebLogster(LogsterParser):
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.regLogin = re.compile('.*GET /digimap/login.*')
-        self.regRegister = re.compile('.*POST /digimap/registrations/register-user.*')
+        self.regLogin = re.compile('.*GET /login.*')
+        self.regRegister = re.compile('.*POST /registrations/register-user.*')
         self.regDownloads = re.compile('.*POST /datadownload/submitorder.*')
 
 
