@@ -50,10 +50,10 @@ class DfCWebLogster(LogsterParser):
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regCosmoLogin = re.compile('.*GET /login.*')
-        self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfs/cosmo-print.*')
+        self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfc/cosmo-print.*')
         self.regCosmoMapproxy = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/mapproxy/wmsMap.*')
-        self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfs/cosmo-my-maps.*')
-        self.regCosmoLoadBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*GET /dfs/cosmo-get-my-map.*')
+        self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfc/cosmo-my-maps.*')
+        self.regCosmoLoadBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*GET /dfc/cosmo-get-my-map.*')
 
 
     def parse_line(self, line):
@@ -92,11 +92,11 @@ class DfCWebLogster(LogsterParser):
         and return a list of metric objects.'''
 
         metricObjects = []
-        metricObjects.append( MetricObject( "logins_count", self.cosmoLogins, "Schools Logins per minute" ) )
-        metricObjects.append( MetricObject( "prints_count", self.cosmoPrints, "Schools Prints per minute" ) )
-        metricObjects.append( MetricObject( "mapproxies_count", self.cosmoMapproxies, "Schools Mapproxy Requests per minute" ) )
-        metricObjects.append( MetricObject( "bookmarks_save_count", self.cosmoSaveBMs, "Schools Save Bookmark Requests per minute" ) )
-        metricObjects.append( MetricObject( "bookmarks_load_count", self.cosmoLoadBMs, "Schools Load Bookmark Requests per minute" ) )
+        metricObjects.append( MetricObject( "logins_count", self.cosmoLogins, "Colleges Logins per minute" ) )
+        metricObjects.append( MetricObject( "prints_count", self.cosmoPrints, "Colleges Prints per minute" ) )
+        metricObjects.append( MetricObject( "mapproxies_count", self.cosmoMapproxies, "Colleges Mapproxy Requests per minute" ) )
+        metricObjects.append( MetricObject( "bookmarks_save_count", self.cosmoSaveBMs, "Colleges Save Bookmark Requests per minute" ) )
+        metricObjects.append( MetricObject( "bookmarks_load_count", self.cosmoLoadBMs, "Colleges Load Bookmark Requests per minute" ) )
 
         '''Response times'''
         if self.cosmoPrints > 0:
