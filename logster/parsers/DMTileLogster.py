@@ -42,10 +42,10 @@ class DMTileLogster(LogsterParser):
         of the tasty bits we find in the log we are parsing.'''
         self.tile_maps = {}
         self.tile_resp = {}
-        
+
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.reg = re.compile('.*/(?P<cache>\w+)/tilecache.py.*Response: (?P<response>\d+).*', re.IGNORECASE)
+        self.reg = re.compile('.*/(?P<cache>\w+)/tilecache.py.* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
 
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
@@ -57,25 +57,31 @@ class DMTileLogster(LogsterParser):
         if regMatch:
             linebits = regMatch.groupdict()
             cache_name = "tc_" + linebits['cache']
+            code = linebits['code']
             response = int(linebits['response']) / float(1000) # convert usec to msec
 
-            if cache_name in self.tile_maps:
-              self.tile_maps[cache_name] += 1
-              self.tile_resp[cache_name] += response
+            if cache_name in self.tile_maps and code in self.tile_maps[cache_name]:
+              self.tile_maps[cache_name][code] += 1
+              self.tile_resp[cache_name][code] += response
             else:
-              self.tile_maps[cache_name] = 1
-              self.tile_resp[cache_name] = response
+              if cache_name not in self.tile_maps:
+                self.tile_maps[cache_name] = {}
+                self.tile_resp[cache_name] = {}
+              self.tile_maps[cache_name][code] = 1
+              self.tile_resp[cache_name][code] = response
         # ignore non-matching lines since our apache log is full of crap
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
         metricObjects = []
-        for cache, count in self.tile_maps.items():
-          metricObjects.append( MetricObject( cache + "_count", count, "Responses per minute" ) )
-        for cache, response in self.tile_resp.items():
-          count = self.tile_maps[cache];
-          avg_response = response / float(count)
-          metricObjects.append( MetricObject( cache + "_response", avg_response, "Avg Response Time per minute" ) )
+        for cache, code_key in self.tile_maps.items():
+          for code, count in self.tile_maps[cache].items():
+            metricObjects.append( MetricObject( cache + "_count." + code, count, "Responses per minute" ) )
+        for cache, code_key in self.tile_resp.items():
+          for code, response in self.tile_resp[cache].items():
+            count = self.tile_maps[cache][code];
+            avg_response = response / float(count)
+            metricObjects.append( MetricObject( cache + "_response." + code, avg_response, "Avg Response Time per minute" ) )
 
         return metricObjects
