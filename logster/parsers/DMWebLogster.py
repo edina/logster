@@ -36,15 +36,16 @@ class DMWebLogster(LogsterParser):
     def __init__(self, option_string=None):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
-        self.logins = 0
-        self.registrations = 0
-        self.downloads = 0
+        self.logins = {}
+        self.registrations = {}
+        self.downloads = {}
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regLogin = re.compile('.*GET /login.*')
-        self.regRegister = re.compile('.*POST /registrations/register-user.*')
-        self.regDownloads = re.compile('.*POST /datadownload/submitorder.*')
+        #self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regRegister = re.compile('.*POST /registrations/register-user HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regDownloads = re.compile('.*POST /datadownload/submitorder.* HTTP/\d.\d" (?P<code>\d+) .*')
 
 
     def parse_line(self, line):
@@ -58,12 +59,29 @@ class DMWebLogster(LogsterParser):
         regRegisterMatch = self.regRegister.match(line)
         regDownloadMatch = self.regDownloads.match(line)
 
+        # FIXME crappy duplicated code.. will be moving to logstash anyway
         if regLoginMatch:
-          self.logins += 1
+#          linebits = regLoginMatch.groupdict()
+#          code = linebits['code']
+          code = "200"
+          if code in self.logins:
+            self.logins[code] += 1
+          else:
+            self.logins[code] = 0
         elif regRegisterMatch:
-          self.registrations += 1
+          linebits = regRegisterMatch.groupdict()
+          code = linebits['code']
+          if code in self.registrations:
+            self.registrations[code] += 1
+          else:
+            self.registrations[code] = 0
         elif regDownloadMatch:
-          self.downloads += 1
+          linebits = regDownloadMatch.groupdict()
+          code = linebits['code']
+          if code in self.downloads:
+            self.downloads[code] += 1
+          else:
+            self.downloads[code] = 0
         # ignore non-matching lines
 
     def get_state(self, duration):
@@ -71,8 +89,11 @@ class DMWebLogster(LogsterParser):
         and return a list of metric objects.'''
 
         metricObjects = []
-        metricObjects.append( MetricObject( "logins_count", self.logins, "Logins per minute" ) )
-        metricObjects.append( MetricObject( "registrations_count", self.registrations, "Registrations per minute" ) )
-        metricObjects.append( MetricObject( "download_submit_count", self.downloads, "Download Submits per minute" ) )
+        for code, count in self.logins.items():
+          metricObjects.append( MetricObject( "logins_count." + code, count, "Logins per minute" ) )
+        for code, count in self.registrations.items():
+          metricObjects.append( MetricObject( "registrations_count." + code, count, "Registrations per minute" ) )
+        for code, count in self.downloads.items():
+          metricObjects.append( MetricObject( "download_submit_count." + code, count, "Download Submits per minute" ) )
 
         return metricObjects
