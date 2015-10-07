@@ -42,8 +42,7 @@ class DMWebLogster(LogsterParser):
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.regLogin = re.compile('.*GET /login.*')
-        #self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .*')
         self.regRegister = re.compile('.*POST /registrations/register-user HTTP/\d.\d" (?P<code>\d+) .*')
         self.regDownloads = re.compile('.*POST /datadownload/submitorder.* HTTP/\d.\d" (?P<code>\d+) .*')
 
@@ -61,9 +60,8 @@ class DMWebLogster(LogsterParser):
 
         # FIXME crappy duplicated code.. will be moving to logstash anyway
         if regLoginMatch:
-#          linebits = regLoginMatch.groupdict()
-#          code = linebits['code']
-          code = "200"
+          linebits = regLoginMatch.groupdict()
+          code = linebits['code']
           if code in self.logins:
             self.logins[code] += 1
           else:
