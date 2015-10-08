@@ -65,21 +65,21 @@ class DMWebLogster(LogsterParser):
           if code in self.logins:
             self.logins[code] += 1
           else:
-            self.logins[code] = 0
+            self.logins[code] = 1
         elif regRegisterMatch:
           linebits = regRegisterMatch.groupdict()
           code = linebits['code']
           if code in self.registrations:
             self.registrations[code] += 1
           else:
-            self.registrations[code] = 0
+            self.registrations[code] = 1
         elif regDownloadMatch:
           linebits = regDownloadMatch.groupdict()
           code = linebits['code']
           if code in self.downloads:
             self.downloads[code] += 1
           else:
-            self.downloads[code] = 0
+            self.downloads[code] = 1
         # ignore non-matching lines
 
     def get_state(self, duration):
