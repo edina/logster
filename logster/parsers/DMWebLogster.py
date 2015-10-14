@@ -84,7 +84,7 @@ class DMWebLogster(LogsterParser):
           else:
             self.downloads[code] = 1
         elif regMapproxyMatch:
-          linebits = regMapproxy.groupdict()
+          linebits = regMapproxyMatch.groupdict()
           code = linebits['code']
           if code in self.mapproxy:
             self.mapproxy[code] += 1
