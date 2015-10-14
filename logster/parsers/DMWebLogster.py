@@ -39,12 +39,14 @@ class DMWebLogster(LogsterParser):
         self.logins = {}
         self.registrations = {}
         self.downloads = {}
+        self.mapproxy = {}
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .*')
         self.regRegister = re.compile('.*POST /registrations/register-user HTTP/\d.\d" (?P<code>\d+) .*')
         self.regDownloads = re.compile('.*POST /datadownload/submitorder.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regMapproxy = re.compile('.*GET /mapproxy.* HTTP/\d.\d" (?P<code>\d+) .*')
 
 
     def parse_line(self, line):
@@ -57,6 +59,7 @@ class DMWebLogster(LogsterParser):
           regLoginMatch = self.regLogin.match(line)
         regRegisterMatch = self.regRegister.match(line)
         regDownloadMatch = self.regDownloads.match(line)
+        regMapproxyMatch = self.regMapproxy.match(line)
 
         # FIXME crappy duplicated code.. will be moving to logstash anyway
         if regLoginMatch:
@@ -80,6 +83,13 @@ class DMWebLogster(LogsterParser):
             self.downloads[code] += 1
           else:
             self.downloads[code] = 1
+        elif regMapproxyMatch:
+          linebits = regMapproxy.groupdict()
+          code = linebits['code']
+          if code in self.mapproxy:
+            self.mapproxy[code] += 1
+          else:
+            self.mapproxy[code] = 1
         # ignore non-matching lines
 
     def get_state(self, duration):
@@ -93,5 +103,7 @@ class DMWebLogster(LogsterParser):
           metricObjects.append( MetricObject( "registrations_count." + code, count, "Registrations per minute" ) )
         for code, count in self.downloads.items():
           metricObjects.append( MetricObject( "download_submit_count." + code, count, "Download Submits per minute" ) )
+        for code, count in self.mapproxy.items():
+          metricObjects.append( MetricObject( "mapproxy_count." + code, count, "Mapproxy tiles per minute" ) )
 
         return metricObjects
