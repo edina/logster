@@ -114,17 +114,17 @@ class DfSWebLogster(LogsterParser):
 
         metricObjects = []
         for code, count in self.cosmoLogins.items():
-            metricObjects.append( MetricObject( "logins_count_" + code, count, "Schools Logins per minute" ) )
+            metricObjects.append( MetricObject( "logins_count." + code, count, "Schools Logins per minute" ) )
         for code, count in self.cosmoPrints.items():
-            metricObjects.append( MetricObject( "prints_count_" + code, count, "Schools Prints per minute" ) )
-            metricObjects.append( MetricObject( "prints_response_" + code, self.printRespTimes[code] / float(count), "Avg Response Time per minute" ) )
+            metricObjects.append( MetricObject( "prints_count." + code, count, "Schools Prints per minute" ) )
+            metricObjects.append( MetricObject( "prints_response." + code, self.printRespTimes[code] / float(count), "Avg Response Time per minute" ) )
         for code, count in self.cosmoMapproxies.items():
-            metricObjects.append( MetricObject( "mapproxies_count_" + code, count, "Schools Mapproxy Requests per minute" ) )
-            metricObjects.append( MetricObject( "mapproxies_response_"+code, self.mapproxyRespTimes[code] / float(count), "Avg Response Time per minute" ) )
+            metricObjects.append( MetricObject( "mapproxies_count." + code, count, "Schools Mapproxy Requests per minute" ) )
+            metricObjects.append( MetricObject( "mapproxies_response."+code, self.mapproxyRespTimes[code] / float(count), "Avg Response Time per minute" ) )
         for code, count in self.cosmoSaveBMs.items():
-            metricObjects.append( MetricObject( "bookmarks_save_count_" + code, count, "Schools Save Bookmark Requests per minute" ) )
+            metricObjects.append( MetricObject( "bookmarks_save_count." + code, count, "Schools Save Bookmark Requests per minute" ) )
         for code, count in self.cosmoLoadBMs.items():
-            metricObjects.append( MetricObject( "bookmarks_load_count_" + code, count, "Schools Load Bookmark Requests per minute" ) )
+            metricObjects.append( MetricObject( "bookmarks_load_count." + code, count, "Schools Load Bookmark Requests per minute" ) )
 
 
         return metricObjects
