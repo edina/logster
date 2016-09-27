@@ -42,6 +42,9 @@ class DfSWebLogster(LogsterParser):
         self.cosmoSaveBMs = {}
         self.cosmoLoadBMs = {}
 
+        self.printRespTimes = {};
+        self.mapproxyRespTimes = {};
+
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regCosmoLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .*')
@@ -74,6 +77,8 @@ class DfSWebLogster(LogsterParser):
         elif regCosmoPrintMatch:
           linebits = regCosmoPrintMatch.groupdict()
           code = linebits['code']
+          self.printRespTimes[code] += int(linebits['response']) / float(1000)
+
           if code in self.cosmoPrints:
             self.cosmoPrints[code] += 1
           else:
@@ -81,6 +86,8 @@ class DfSWebLogster(LogsterParser):
         elif regCosmoMapproxiesMatch:
           linebits = regCosmoMapproxiesMatch.groupdict()
           code = linebits['code']
+          self.mapproxyRespTimes[code] += int(linebits['response']) / float(1000)
+
           if code in self.cosmoMapproxies:
             self.cosmoMapproxies[code] += 1
           else:
@@ -107,14 +114,17 @@ class DfSWebLogster(LogsterParser):
 
         metricObjects = []
         for code, count in self.cosmoLogins.items():
-            metricObjects.append( MetricObject( "logins_count" + code, count, "Schools Logins per minute" ) )
+            metricObjects.append( MetricObject( "logins_count_" + code, count, "Schools Logins per minute" ) )
         for code, count in self.cosmoPrints.items():
-            metricObjects.append( MetricObject( "prints_count" + code, count, "Schools Prints per minute" ) )
+            metricObjects.append( MetricObject( "prints_count_" + code, count, "Schools Prints per minute" ) )
+            metricObjects.append( MetricObject( "prints_response_" + code, self.printRespTimes[code] / float(count), "Avg Response Time per minute" ) )
         for code, count in self.cosmoMapproxies.items():
-            metricObjects.append( MetricObject( "mapproxies_count" + code, count, "Schools Mapproxy Requests per minute" ) )
+            metricObjects.append( MetricObject( "mapproxies_count_" + code, count, "Schools Mapproxy Requests per minute" ) )
+            metricObjects.append( MetricObject( "mapproxies_response_"+code, self.mapproxyRespTimes[code] / float(count), "Avg Response Time per minute" ) )
         for code, count in self.cosmoSaveBMs.items():
-            metricObjects.append( MetricObject( "bookmarks_save_count" + code, count, "Schools Save Bookmark Requests per minute" ) )
+            metricObjects.append( MetricObject( "bookmarks_save_count_" + code, count, "Schools Save Bookmark Requests per minute" ) )
         for code, count in self.cosmoLoadBMs.items():
-            metricObjects.append( MetricObject( "bookmarks_load_count" + code, count, "Schools Load Bookmark Requests per minute" ) )
+            metricObjects.append( MetricObject( "bookmarks_load_count_" + code, count, "Schools Load Bookmark Requests per minute" ) )
+
 
         return metricObjects
