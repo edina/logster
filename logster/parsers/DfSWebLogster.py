@@ -47,7 +47,7 @@ class DfSWebLogster(LogsterParser):
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.regCosmoLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regCosmoLogin = re.compile('.*GET /login.*')
         self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfs/cosmo-print.* HTTP/\d.\d" (?P<code>\d+) .*')
         self.regCosmoMapproxy = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/mapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .*')
         self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfs/cosmo-my-maps.* HTTP/\d.\d" (?P<code>\d+) .*')
