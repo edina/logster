@@ -68,7 +68,7 @@ class DfSWebLogster(LogsterParser):
         if regCosmoLoginMatch:
           linebits = regCosmoLoginMatch.groupdict()
           #code = linebits['code']
-          code = 200 # FIXME: Hardcoded code as the /login line is greater than 1024 characters and the code, which is at the end gets truncated
+          code = "200" # FIXME: Hardcoded code as the /login line is greater than 1024 characters and the code, which is at the end gets truncated
           if code in self.cosmoLogins:
             self.cosmoLogins[code] += 1
           else:
