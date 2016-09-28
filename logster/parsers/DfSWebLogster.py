@@ -77,21 +77,23 @@ class DfSWebLogster(LogsterParser):
         elif regCosmoPrintMatch:
           linebits = regCosmoPrintMatch.groupdict()
           code = linebits['code']
-          self.printRespTimes[code] += int(linebits['response']) / float(1000)
 
           if code in self.cosmoPrints:
             self.cosmoPrints[code] += 1
+            self.printRespTimes[code] += int(linebits['response']) / float(1000)
           else:
             self.cosmoPrints[code] = 1
+            self.printRespTimes[code] = int(linebits['response']) / float(1000)
         elif regCosmoMapproxiesMatch:
           linebits = regCosmoMapproxiesMatch.groupdict()
           code = linebits['code']
-          self.mapproxyRespTimes[code] += int(linebits['response']) / float(1000)
 
           if code in self.cosmoMapproxies:
             self.cosmoMapproxies[code] += 1
+            self.mapproxyRespTimes[code] += int(linebits['response']) / float(1000)
           else:
             self.cosmoMapproxies[code] = 1
+            self.mapproxyRespTimes[code] = int(linebits['response']) / float(1000)
         elif regCosmoSaveBMsMatch:
           linebits = regCosmoSaveBMsMatch.groupdict()
           code = linebits['code']
