@@ -59,9 +59,7 @@ class DfSWebLogster(LogsterParser):
         object's state variables. Takes a single argument, the line to be parsed.'''
 
         # Apply regular expression to each line and extract interesting bits.
-        regCosmoLoginMatch = False
-        if "MONITOR" not in line and "idp.edina.ac.uk" not in line:
-            regCosmoLoginMatch = self.regCosmoLogin.match(line)
+        regCosmoLoginMatch = self.regCosmoLogin.match(line)
         regCosmoPrintMatch = self.regCosmoPrint.match(line)
         regCosmoMapproxiesMatch = self.regCosmoMapproxy.match(line)
         regCosmoSaveBMsMatch = self.regCosmoSaveBMs.match(line)
