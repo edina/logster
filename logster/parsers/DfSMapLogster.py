@@ -49,7 +49,7 @@ class DfSMapLogster(LogsterParser):
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.reg = re.compile('.*mapserv.*map=mapfiles(/|%2F)(?P<mapcollection>\w+)(/|%2F).*\.map.* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
+        self.reg = re.compile('.*mapserv.*map=mapfiles/(?P<mapcollection>\w+)/.*\.map.*HTTP/\d.\d" (?P<code>\d+).*Response: (?P<response>\d+)', re.IGNORECASE)
         self.clive_reg = re.compile('.*clive/clive.*product=(?P<product>\w+)&.* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
         self.clive_map_reg = re.compile('.*request=GetMap.*', re.IGNORECASE)
         self.clive_print_reg = re.compile('.*POST /clive/clive.*log=(?P<product>\w+)&.* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
