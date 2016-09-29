@@ -40,69 +40,110 @@ class DfSMapLogster(LogsterParser):
     def __init__(self, option_string=None):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
-        self.mapserverMaps = {}
-        self.mapserverResp = {}
-        
-        self.clivePrints = 0
-        self.clivePrintRespTimes = 0
-        self.mapstreamWMSs = 0
-        self.mapstreamWMSRespTimes = 0
-        
+        self.mapserver_maps = {}
+        self.mapserver_resp = {}
+        self.clive_maps_count = {}
+        self.clive_maps_resp = {}
+        self.clive_print_count = {}
+        self.clive_print_resp = {}
+
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.mapservReg = re.compile('.*mapserv.*map=mapfiles(/|%2F)(?P<mapcollection>\w+)(/|%2F).*\.map.*Response: (?P<response>\d+).*', re.IGNORECASE)
-        self.cliveReg = re.compile('.*clive/clive.*Response: (?P<response>\d+).*', re.IGNORECASE)
-        self.mapstreamReg = re.compile('.*mapstream/wms.*Response: (?P<response>\d+).*', re.IGNORECASE)
-
+        self.reg = re.compile('.*mapserv.*map=mapfiles(/|%2F)(?P<mapcollection>\w+)(/|%2F).*\.map.* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
+        self.clive_reg = re.compile('.*clive/clive.*product=(?P<product>\w+)&.* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
+        self.clive_map_reg = re.compile('.*request=GetMap.*', re.IGNORECASE)
+        self.clive_print_reg = re.compile('.*POST /clive/clive.*log=(?P<product>\w+)&.* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
 
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
         object's state variables. Takes a single argument, the line to be parsed.'''
 
         # Apply regular expression to each line and extract interesting bits.
-        mapservRegMatch = self.mapservReg.match(line)
-        cliveRegMatch = self.cliveReg.match(line)
-        mapstreamRegMatch = self.mapstreamReg.match(line)
+        regMatch = self.reg.match(line)
+        cliveRegMatch = self.clive_reg.match(line)
+        clivePrintMatch = self.clive_print_reg.match(line)
 
         # FIXME don't like this duplicated code
-        if mapservRegMatch:
-            linebits = mapservRegMatch.groupdict()
-            mapCollection = "ms_" + linebits['mapcollection']
+        if regMatch:
+            linebits = regMatch.groupdict()
+            map_collection = "ms_" + linebits['mapcollection']
+            code = linebits['code']
             response = int(linebits['response']) / float(1000) # convert usec to msec
 
-            if mapCollection in self.mapserverMaps:
-              self.mapserverMaps[mapCollection] += 1
-              self.mapserverResp[mapCollection] += response
+            if map_collection in self.mapserver_maps and code in self.mapserver_maps[map_collection]:
+              self.mapserver_maps[map_collection][code] += 1
+              self.mapserver_resp[map_collection][code] += response
             else:
-              self.mapserverMaps[mapCollection] = 1
-              self.mapserverResp[mapCollection] = response
+              if map_collection not in self.mapserver_maps:
+                self.mapserver_maps[map_collection] = {}
+                self.mapserver_resp[map_collection] = {}
+              self.mapserver_maps[map_collection][code] = 1
+              self.mapserver_resp[map_collection][code] = response
+
         elif cliveRegMatch:
-          self.clivePrints += 1
-          linebits = cliveRegMatch.groupdict()
-          self.clivePrintRespTimes += int(linebits['response']) / float(1000)
-        elif mapstreamRegMatch:
-          self.mapstreamWMSs += 1
-          linebits = mapstreamRegMatch.groupdict()
-          self.mapstreamWMSRespTimes += int(linebits['response']) / float(1000)
+          isMap = self.clive_map_reg.match(line)
+
+          if isMap:
+            linebits = cliveRegMatch.groupdict()
+            product = "clive_" + linebits['product'].lower();
+            code = linebits['code']
+            response = int(linebits['response']) / float(1000) # convert usec to msec
+
+            if product in self.clive_maps_count and code in self.clive_maps_count[product]:
+              self.clive_maps_count[product][code] += 1
+              self.clive_maps_resp[product][code] += response
+            else:
+              if product not in self.clive_maps_count:
+                self.clive_maps_count[product] = {}
+                self.clive_maps_resp[product] = {}
+              self.clive_maps_count[product][code] = 1
+              self.clive_maps_resp[product][code] = response
+        elif clivePrintMatch:
+          linebits = clivePrintMatch.groupdict()
+          product = "clive_" + linebits['product'].lower();
+          code = linebits['code']
+          response = int(linebits['response']) / float(1000) # convert usec to msec
+
+          if product in self.clive_print_count and code in self.clive_print_count[product]:
+            self.clive_print_count[product][code] += 1
+            self.clive_print_resp[product][code] += response
+          else:
+            if product not in self.clive_print_count:
+              self.clive_print_count[product] = {}
+              self.clive_print_resp[product] = {}
+            self.clive_print_count[product][code] = 1
+            self.clive_print_resp[product][code] = response
         # ignore non-matching lines since our apache log is full of crap
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
         metricObjects = []
-        for product, count in self.mapserverMaps.items():
-          metricObjects.append( MetricObject( product + "_count", count, "Responses per minute" ) )
-        for product, response in self.mapserverResp.items():
-          count = self.mapserverMaps[product];
-          avg_response = response / float(count)
-          metricObjects.append( MetricObject( product + "_response", avg_response, "Avg Response Time per minute" ) )
+        for product, code_key in self.mapserver_maps.items():
+          for code, count in self.mapserver_maps[product].items():
+            metricObjects.append( MetricObject( product + "_count." + code, count, "Responses per minute" ) )
+        for product, code_key in self.mapserver_resp.items():
+          for code, response in self.mapserver_resp[product].items():
+            count = self.mapserver_maps[product][code]
+            avg_response = response / float(count)
+            metricObjects.append( MetricObject( product + "_response." + code, avg_response, "Avg Response Time per minute" ) )
 
-        metricObjects.append( MetricObject( "clive_print_count", self.clivePrints, "Clive Prints per minute" ) )
-        metricObjects.append( MetricObject( "mapstream_wms_count", self.mapstreamWMSs, "Mapstream WMSs per minute" ) )
+        for product, code_key in self.clive_maps_count.items():
+          for code, count in self.clive_maps_count[product].items():
+            metricObjects.append( MetricObject( product + "_map_count." + code, count, "Map Responses per minute" ) )
+        for product, code_key in self.clive_maps_resp.items():
+          for code, response in self.clive_maps_resp[product].items():
+            count = self.clive_maps_count[product][code]
+            avg_response = response / float(count)
+            metricObjects.append( MetricObject( product + "_map_response." + code, avg_response, "Map Avg Response Time per minute" ) )
 
-        if self.clivePrints > 0:
-          metricObjects.append( MetricObject( "clive_print_response", self.clivePrintRespTimes / float(self.clivePrints), "Avg Response Time per minute" ) )
-        if self.mapstreamWMSs > 0:
-          metricObjects.append( MetricObject( "mapstream_wms_response", self.mapstreamWMSRespTimes / float(self.mapstreamWMSs), "Avg Response Time per minute" ) )
+        for product, code_key in self.clive_print_count.items():
+          for code, count in self.clive_print_count[product].items():
+            metricObjects.append( MetricObject( product + "_print_count." + code, count, "Print Responses per minute" ) )
+        for product, code_key in self.clive_print_resp.items():
+          for code, response in self.clive_print_resp[product].items():
+            count = self.clive_print_count[product][code]
+            avg_response = response / float(count)
+            metricObjects.append( MetricObject( product + "_print_response." + code, avg_response, "Avg Print Response Time per minute" ) )
 
         return metricObjects
