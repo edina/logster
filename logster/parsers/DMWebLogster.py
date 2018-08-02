@@ -45,7 +45,7 @@ class DMWebLogster(LogsterParser):
         # fields from the line.
         self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .*')
         self.regRegister = re.compile('.*PUT /api/user/register HTTP/\d.\d" (?P<code>\d+) .*')
-        self.regDownloads = re.compile('.*POST /datadownload/submitorder.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regDownloads = re.compile('.*POST (/roam/api/download/orders|/datadownload/submitorder).* HTTP/\d.\d" (?P<code>\d+) .*')
         self.regMapproxy = re.compile('.*GET /mapproxy.* HTTP/\d.\d" (?P<code>\d+) .*')
 
 
