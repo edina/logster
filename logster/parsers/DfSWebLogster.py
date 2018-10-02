@@ -49,7 +49,7 @@ class DfSWebLogster(LogsterParser):
         # fields from the line.
         self.regCosmoLogin = re.compile('.*GET /login.*')
         self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfs/cosmo-print.* HTTP/\d.\d" (?P<code>\d+) .*')
-        self.regCosmoMapproxy = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/mapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regCosmoMapproxy = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/dfsmapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .*')
         self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfs/cosmo-my-maps.* HTTP/\d.\d" (?P<code>\d+) .*')
         self.regCosmoLoadBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*GET /dfs/cosmo-get-my-map.* HTTP/\d.\d" (?P<code>\d+) .*')
 
