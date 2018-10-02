@@ -36,24 +36,22 @@ class DfCWebLogster(LogsterParser):
     def __init__(self, option_string=None):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
-        self.cosmoLogins = 0
-        self.cosmoPrints = 0
-        self.cosmoMapproxies = 0
-        self.cosmoSaveBMs = 0
-        self.cosmoLoadBMs = 0
+        self.cosmoLogins = {}
+        self.cosmoPrints = {}
+        self.cosmoMapproxies = {}
+        self.cosmoSaveBMs = {}
+        self.cosmoLoadBMs = {}
 
-        self.printRespTimes = 0;
-        self.mapproxyRespTimes = 0;
-        self.saveBMRespTimes = 0;
-        self.loadBMRespTimes = 0;
+        self.printRespTimes = {};
+        self.mapproxyRespTimes = {};
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regCosmoLogin = re.compile('.*GET /login.*')
-        self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfc/cosmo-print.*')
-        self.regCosmoMapproxy = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/dfcmapproxy/wmsMap.*')
-        self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfc/cosmo-my-maps.*')
-        self.regCosmoLoadBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*GET /dfc/cosmo-get-my-map.*')
+        self.regCosmoPrint = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfc/cosmo-print.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regCosmoMapproxy = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*/dfcmapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regCosmoSaveBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*POST /dfc/cosmo-my-maps.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regCosmoLoadBMs = re.compile('.*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} (?P<response>\d+) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*GET /dfc/cosmo-get-my-map.* HTTP/\d.\d" (?P<code>\d+) .*')
 
 
     def parse_line(self, line):
@@ -68,23 +66,47 @@ class DfCWebLogster(LogsterParser):
         regCosmoLoadBMsMatch = self.regCosmoLoadBMs.match(line)
 
         if regCosmoLoginMatch:
-          self.cosmoLogins += 1
+          linebits = regCosmoLoginMatch.groupdict()
+          #code = linebits['code']
+          code = "200" # FIXME: Hardcoded code as the /login line is greater than 1024 characters and the code, which is at the end gets truncated
+          if code in self.cosmoLogins:
+            self.cosmoLogins[code] += 1
+          else:
+            self.cosmoLogins[code] = 1
         elif regCosmoPrintMatch:
-          self.cosmoPrints += 1
           linebits = regCosmoPrintMatch.groupdict()
-          self.printRespTimes += int(linebits['response']) / float(1000)
+          code = linebits['code']
+
+          if code in self.cosmoPrints:
+            self.cosmoPrints[code] += 1
+            self.printRespTimes[code] += int(linebits['response']) / float(1000)
+          else:
+            self.cosmoPrints[code] = 1
+            self.printRespTimes[code] = int(linebits['response']) / float(1000)
         elif regCosmoMapproxiesMatch:
-          self.cosmoMapproxies += 1
           linebits = regCosmoMapproxiesMatch.groupdict()
-          self.mapproxyRespTimes += int(linebits['response']) / float(1000)
+          code = linebits['code']
+
+          if code in self.cosmoMapproxies:
+            self.cosmoMapproxies[code] += 1
+            self.mapproxyRespTimes[code] += int(linebits['response']) / float(1000)
+          else:
+            self.cosmoMapproxies[code] = 1
+            self.mapproxyRespTimes[code] = int(linebits['response']) / float(1000)
         elif regCosmoSaveBMsMatch:
-          self.cosmoSaveBMs += 1
           linebits = regCosmoSaveBMsMatch.groupdict()
-          self.saveBMRespTimes += int(linebits['response']) / float(1000)
+          code = linebits['code']
+          if code in self.cosmoSaveBMs:
+            self.cosmoSaveBMs[code] += 1
+          else:
+            self.cosmoSaveBMs[code] = 1
         elif regCosmoLoadBMsMatch:
-          self.cosmoLoadBMs += 1
           linebits = regCosmoLoadBMsMatch.groupdict()
-          self.loadBMRespTimes += int(linebits['response']) / float(1000)
+          code = linebits['code']
+          if code in self.cosmoLoadBMs:
+            self.cosmoLoadBMs[code] += 1
+          else:
+            self.cosmoLoadBMs[code] = 1
         # ignore non-matching lines
 
     def get_state(self, duration):
@@ -92,20 +114,18 @@ class DfCWebLogster(LogsterParser):
         and return a list of metric objects.'''
 
         metricObjects = []
-        metricObjects.append( MetricObject( "logins_count", self.cosmoLogins, "Colleges Logins per minute" ) )
-        metricObjects.append( MetricObject( "prints_count", self.cosmoPrints, "Colleges Prints per minute" ) )
-        metricObjects.append( MetricObject( "mapproxies_count", self.cosmoMapproxies, "Colleges Mapproxy Requests per minute" ) )
-        metricObjects.append( MetricObject( "bookmarks_save_count", self.cosmoSaveBMs, "Colleges Save Bookmark Requests per minute" ) )
-        metricObjects.append( MetricObject( "bookmarks_load_count", self.cosmoLoadBMs, "Colleges Load Bookmark Requests per minute" ) )
+        for code, count in self.cosmoLogins.items():
+            metricObjects.append( MetricObject( "logins_count." + code, count, "Colleges Logins per minute" ) )
+        for code, count in self.cosmoPrints.items():
+            metricObjects.append( MetricObject( "prints_count." + code, count, "Colleges Prints per minute" ) )
+            metricObjects.append( MetricObject( "prints_response." + code, self.printRespTimes[code] / float(count), "Avg Response Time per minute" ) )
+        for code, count in self.cosmoMapproxies.items():
+            metricObjects.append( MetricObject( "mapproxies_count." + code, count, "Colleges Mapproxy Requests per minute" ) )
+            metricObjects.append( MetricObject( "mapproxies_response."+code, self.mapproxyRespTimes[code] / float(count), "Avg Response Time per minute" ) )
+        for code, count in self.cosmoSaveBMs.items():
+            metricObjects.append( MetricObject( "bookmarks_save_count." + code, count, "Colleges Save Bookmark Requests per minute" ) )
+        for code, count in self.cosmoLoadBMs.items():
+            metricObjects.append( MetricObject( "bookmarks_load_count." + code, count, "Colleges Load Bookmark Requests per minute" ) )
 
-        '''Response times'''
-        if self.cosmoPrints > 0:
-          metricObjects.append( MetricObject( "prints_response", self.printRespTimes / float(self.cosmoPrints), "Avg Response Time per minute" ) )
-        if self.cosmoMapproxies > 0:
-          metricObjects.append( MetricObject( "mapproxies_response", self.mapproxyRespTimes / float(self.cosmoMapproxies), "Avg Response Time per minute" ) )
-        if self.cosmoSaveBMs > 0:
-          metricObjects.append( MetricObject( "bookmarks_save_response", self.saveBMRespTimes / float(self.cosmoSaveBMs), "Avg Response Time per minute" ) )
-        if self.cosmoLoadBMs > 0:
-          metricObjects.append( MetricObject( "bookmarks_load_response", self.loadBMRespTimes / float(self.cosmoLoadBMs), "Avg Response Time per minute" ) )
 
         return metricObjects
