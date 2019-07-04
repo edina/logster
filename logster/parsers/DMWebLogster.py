@@ -40,13 +40,15 @@ class DMWebLogster(LogsterParser):
         self.registrations = {}
         self.downloads = {}
         self.mapproxy = {}
+        self.mapproxyWms = {}
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .*')
         self.regRegister = re.compile('.*PUT /api/user/register HTTP/\d.\d" (?P<code>\d+) .*')
         self.regDownloads = re.compile('.*POST (/roam/api/download/orders|/datadownload/submitorder).* HTTP/\d.\d" (?P<code>\d+) .*')
-        self.regMapproxy = re.compile('.*GET /mapproxy.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regMapproxy = re.compile('.*GET /mapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regMapproxyWms = re.compile('.*GET /mapproxy/wms/.* HTTP/\d.\d" (?P<code>\d+) .*')
 
 
     def parse_line(self, line):
@@ -60,6 +62,7 @@ class DMWebLogster(LogsterParser):
         regRegisterMatch = self.regRegister.match(line)
         regDownloadMatch = self.regDownloads.match(line)
         regMapproxyMatch = self.regMapproxy.match(line)
+        regMapproxyWmsMatch = self.regMapproxyWms.match(line)
 
         # FIXME crappy duplicated code.. will be moving to logstash anyway
         if regLoginMatch:
@@ -90,6 +93,13 @@ class DMWebLogster(LogsterParser):
             self.mapproxy[code] += 1
           else:
             self.mapproxy[code] = 1
+        elif regMapproxyWmsMatch:
+          linebits = regMapproxyWmsMatch.groupdict()
+          code = linebits['code']
+          if code in self.mapproxyWms:
+            self.mapproxyWms[code] += 1
+          else:
+            self.mapproxyWms[code] = 1
         # ignore non-matching lines
 
     def get_state(self, duration):
@@ -105,5 +115,7 @@ class DMWebLogster(LogsterParser):
           metricObjects.append( MetricObject( "download_submit_count." + code, count, "Download Submits per minute" ) )
         for code, count in self.mapproxy.items():
           metricObjects.append( MetricObject( "mapproxy_count." + code, count, "Mapproxy tiles per minute" ) )
+        for code, count in self.mapproxyWms.items():
+          metricObjects.append( MetricObject( "mapproxy_wms_count." + code, count, "Mapproxy WMS requests per minute" ) )
 
         return metricObjects
