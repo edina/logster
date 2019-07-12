@@ -36,8 +36,10 @@ class DMWebLogster(LogsterParser):
     def __init__(self, option_string=None):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
-        self.logins = {}
+        self.logins = {} # logins via EdiAuth/Digimap
         self.loginsResponse = {}
+        self.loginsApi = {} # logins via the schools API(DataNation)
+        self.loginsApiResponse = {}
         self.registrations = {}
         self.registrationsResponse = {}
         self.downloads = {}
@@ -50,6 +52,7 @@ class DMWebLogster(LogsterParser):
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
+        self.regLoginApi = re.compile('.*POST /roam/api/schools/login.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
         self.regRegister = re.compile('.*PUT /api/user/register HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
         self.regDownloads = re.compile('.*POST (/roam/api/download/orders|/datadownload/submitorder).* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
         self.regMapproxy = re.compile('.*GET /mapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
@@ -64,6 +67,7 @@ class DMWebLogster(LogsterParser):
         regLoginMatch = False
         if "MONITOR" not in line and "idp.edina.ac.uk" not in line:
           regLoginMatch = self.regLogin.match(line)
+        regLoginApiMatch = self.regLoginApi.match(line)
         regRegisterMatch = self.regRegister.match(line)
         regDownloadMatch = self.regDownloads.match(line)
         regMapproxyMatch = self.regMapproxy.match(line)
@@ -72,6 +76,9 @@ class DMWebLogster(LogsterParser):
         if regLoginMatch:
           linebits = regLoginMatch.groupdict()
           self.populate(self.logins, self.loginsResponse, linebits)
+        elif regLoginApiMatch:
+          linebits = regLoginApiMatch.groupdict()
+          self.populate(self.loginsApi, self.loginsApiResponse, linebits)
         elif regRegisterMatch:
           linebits = regRegisterMatch.groupdict()
           self.populate(self.registrations, self.registrationsResponse, linebits)
@@ -102,6 +109,7 @@ class DMWebLogster(LogsterParser):
 
         metricObjects = []
         self.record_metric(metricObjects, self.logins, self.loginsResponse, "logins", "Logins per minute")
+        self.record_metric(metricObjects, self.loginsApi, self.loginsApiResponse, "logins", "API Logins per minute")
         self.record_metric(metricObjects, self.registrations, self.registrationsResponse, "registrations", "Registrations per minute")
         self.record_metric(metricObjects, self.downloads, self.downloadsResponse, "download_submit", "Download Submits per minute")
         self.record_metric(metricObjects, self.mapproxy, self.mapproxyResponse, "mapproxy", "Mapproxy tiles per minute")
