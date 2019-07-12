@@ -37,18 +37,23 @@ class DMWebLogster(LogsterParser):
         '''Initialize any data structures or variables needed for keeping track
         of the tasty bits we find in the log we are parsing.'''
         self.logins = {}
+        self.loginsResponse = {}
         self.registrations = {}
+        self.registrationsResponse = {}
         self.downloads = {}
+        self.downloadsResponse = {}
         self.mapproxy = {}
+        self.mapproxyResponse = {}
         self.mapproxyWms = {}
+        self.mapproxyWmsResponse = {}
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .*')
-        self.regRegister = re.compile('.*PUT /api/user/register HTTP/\d.\d" (?P<code>\d+) .*')
-        self.regDownloads = re.compile('.*POST (/roam/api/download/orders|/datadownload/submitorder).* HTTP/\d.\d" (?P<code>\d+) .*')
-        self.regMapproxy = re.compile('.*GET /mapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .*')
-        self.regMapproxyWms = re.compile('.*GET /mapproxy/wms/.* HTTP/\d.\d" (?P<code>\d+) .*')
+        self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
+        self.regRegister = re.compile('.*PUT /api/user/register HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
+        self.regDownloads = re.compile('.*POST (/roam/api/download/orders|/datadownload/submitorder).* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
+        self.regMapproxy = re.compile('.*GET /mapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
+        self.regMapproxyWms = re.compile('.*GET /mapproxy/wms/.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
 
 
     def parse_line(self, line):
@@ -64,58 +69,50 @@ class DMWebLogster(LogsterParser):
         regMapproxyMatch = self.regMapproxy.match(line)
         regMapproxyWmsMatch = self.regMapproxyWms.match(line)
 
-        # FIXME crappy duplicated code.. will be moving to logstash anyway
         if regLoginMatch:
           linebits = regLoginMatch.groupdict()
-          code = linebits['code']
-          if code in self.logins:
-            self.logins[code] += 1
-          else:
-            self.logins[code] = 1
+          self.populate(self.logins, self.loginsResponse, linebits)
         elif regRegisterMatch:
           linebits = regRegisterMatch.groupdict()
-          code = linebits['code']
-          if code in self.registrations:
-            self.registrations[code] += 1
-          else:
-            self.registrations[code] = 1
+          self.populate(self.registrations, self.registrationsResponse, linebits)
         elif regDownloadMatch:
           linebits = regDownloadMatch.groupdict()
-          code = linebits['code']
-          if code in self.downloads:
-            self.downloads[code] += 1
-          else:
-            self.downloads[code] = 1
+          self.populate(self.downloads, self.downloadsResponse, linebits)
         elif regMapproxyMatch:
           linebits = regMapproxyMatch.groupdict()
-          code = linebits['code']
-          if code in self.mapproxy:
-            self.mapproxy[code] += 1
-          else:
-            self.mapproxy[code] = 1
+          self.populate(self.mapproxy, self.mapproxyResponse, linebits)
         elif regMapproxyWmsMatch:
           linebits = regMapproxyWmsMatch.groupdict()
-          code = linebits['code']
-          if code in self.mapproxyWms:
-            self.mapproxyWms[code] += 1
-          else:
-            self.mapproxyWms[code] = 1
+          self.populate(self.mapproxyWms, self.mapproxyWmsResponse, linebits)
         # ignore non-matching lines
+
+    def populate(self, countDict, responseDict, linebits):
+        code = linebits['code']
+        response = linebits['response']
+        if code in countDict:
+            countDict[code] += 1
+            responseDict[code] += response
+        else:
+            countDict[code] = 1
+            responseDict[code] = response
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
 
         metricObjects = []
-        for code, count in self.logins.items():
-          metricObjects.append( MetricObject( "logins_count." + code, count, "Logins per minute" ) )
-        for code, count in self.registrations.items():
-          metricObjects.append( MetricObject( "registrations_count." + code, count, "Registrations per minute" ) )
-        for code, count in self.downloads.items():
-          metricObjects.append( MetricObject( "download_submit_count." + code, count, "Download Submits per minute" ) )
-        for code, count in self.mapproxy.items():
-          metricObjects.append( MetricObject( "mapproxy_count." + code, count, "Mapproxy tiles per minute" ) )
-        for code, count in self.mapproxyWms.items():
-          metricObjects.append( MetricObject( "mapproxy_wms_count." + code, count, "Mapproxy WMS requests per minute" ) )
+        self.record_metric(metricObjects, self.logins, self.loginsResponse, "logins", "Logins per minute")
+        self.record_metric(metricObjects, self.registrations, self.registrationsResponse, "registrations", "Registrations per minute")
+        self.record_metric(metricObjects, self.downloads, self.downloadsResponse, "download_submit", "Download Submits per minute")
+        self.record_metric(metricObjects, self.mapproxy, self.mapproxyResponse, "mapproxy", "Mapproxy tiles per minute")
+        self.record_metric(metricObjects, self.mapproxyWms, self.mapproxyWmsResponse, "mapproxy_wms", "Mapproxy WMS requests per minute")
 
         return metricObjects
+
+    def record_metric(self, metricObjects, countDict, responseDict, metricName, description):
+        for code, count in countDict.items():
+            metricObjects.append( MetricObject( metricName + "_count." + code, count, description ) )
+        for code, responseTotal in responseDict.items():
+            count = countDict[code]
+            response = responseTotal / float(count)
+            metricObjects.append( MetricObject( metricName + "_response." + code, response, "Avg Response " + description ) )
