@@ -88,7 +88,7 @@ class DMWebLogster(LogsterParser):
 
     def populate(self, countDict, responseDict, linebits):
         code = linebits['code']
-        response = linebits['response']
+        response = int(linebits['response']) / float(1000) # convert usec to msec
         if code in countDict:
             countDict[code] += 1
             responseDict[code] += response
