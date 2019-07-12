@@ -70,15 +70,15 @@ class DMMapProxyLogster(LogsterParser):
         cache_name = cacheName + linebits['cache']
         code = linebits['code']
         response = int(linebits['response']) / float(1000) # convert usec to msec
-        if cache_name in self.countDict and code in self.countDict[cache_name]:
-            self.countDict[cache_name][code] += 1
-            self.responseDict[cache_name][code] += response
+        if cache_name in countDict and code in countDict[cache_name]:
+            countDict[cache_name][code] += 1
+            responseDict[cache_name][code] += response
         else:
-            if cache_name not in self.countDict:
-                self.countDict[cache_name] = {}
-                self.responseDict[cache_name] = {}
-            self.countDict[cache_name][code] = 1
-            self.responseDict[cache_name][code] = response
+            if cache_name not in countDict:
+                countDict[cache_name] = {}
+                responseDict[cache_name] = {}
+            countDict[cache_name][code] = 1
+            responseDict[cache_name][code] = response
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
