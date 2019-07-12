@@ -109,7 +109,7 @@ class DMWebLogster(LogsterParser):
 
         metricObjects = []
         self.record_metric(metricObjects, self.logins, self.loginsResponse, "logins", "Logins per minute")
-        self.record_metric(metricObjects, self.loginsApi, self.loginsApiResponse, "logins", "API Logins per minute")
+        self.record_metric(metricObjects, self.loginsApi, self.loginsApiResponse, "logins_api", "API Logins per minute")
         self.record_metric(metricObjects, self.registrations, self.registrationsResponse, "registrations", "Registrations per minute")
         self.record_metric(metricObjects, self.downloads, self.downloadsResponse, "download_submit", "Download Submits per minute")
         self.record_metric(metricObjects, self.mapproxy, self.mapproxyResponse, "mapproxy", "Mapproxy tiles per minute")
