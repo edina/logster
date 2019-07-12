@@ -42,10 +42,13 @@ class DMMapProxyLogster(LogsterParser):
         of the tasty bits we find in the log we are parsing.'''
         self.tile_maps = {}
         self.tile_resp = {}
+        self.wms_maps = {}
+        self.wms_resp = {}
 
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
-        self.reg = re.compile('.*/mapproxy/service.*layers=(?P<cache>[\w-]+).* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
+        self.reg = re.compile('(?=.*tiled=true).*/mapproxy/service.*layers=(?P<cache>[\w-]+).* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
+        self.wmsreg = re.compile('(?!.*tiled=true).*/mapproxy/service.*layers=(?P<cache>[\w-]+).* (?P<code>\d+) \d+ Response: (?P<response>\d+).*', re.IGNORECASE)
 
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
@@ -53,35 +56,45 @@ class DMMapProxyLogster(LogsterParser):
 
         # Apply regular expression to each line and extract interesting bits.
         regMatch = self.reg.match(line)
+        regWmsMatch = self.wmsreg.match(line)
 
         if regMatch:
             linebits = regMatch.groupdict()
-            cache_name = "mp_" + linebits['cache']
-            code = linebits['code']
-            response = int(linebits['response']) / float(1000) # convert usec to msec
-
-            if cache_name in self.tile_maps and code in self.tile_maps[cache_name]:
-              self.tile_maps[cache_name][code] += 1
-              self.tile_resp[cache_name][code] += response
-            else:
-              if cache_name not in self.tile_maps:
-                self.tile_maps[cache_name] = {}
-                self.tile_resp[cache_name] = {}
-              self.tile_maps[cache_name][code] = 1
-              self.tile_resp[cache_name][code] = response
+            self.populate(self.tile_maps, self.tile_resp, linebits, "mp_")
+        elif regWmsMatch:
+            linebits = regWmsMatch.groupdict()
+            self.populate(self.wms_maps, self.wms_resp, linebits, "mpwms_")
         # ignore non-matching lines since our apache log is full of crap
+
+    def populate(self, countDict, responseDict, linebits, cacheName):
+        cache_name = cacheName + linebits['cache']
+        code = linebits['code']
+        response = int(linebits['response']) / float(1000) # convert usec to msec
+        if cache_name in self.countDict and code in self.countDict[cache_name]:
+            self.countDict[cache_name][code] += 1
+            self.responseDict[cache_name][code] += response
+        else:
+            if cache_name not in self.countDict:
+                self.countDict[cache_name] = {}
+                self.responseDict[cache_name] = {}
+            self.countDict[cache_name][code] = 1
+            self.responseDict[cache_name][code] = response
 
     def get_state(self, duration):
         '''Run any necessary calculations on the data collected from the logs
         and return a list of metric objects.'''
         metricObjects = []
-        for cache, code_key in self.tile_maps.items():
-          for code, count in self.tile_maps[cache].items():
-            metricObjects.append( MetricObject( cache + "_count." + code, count, "Responses per minute" ) )
-        for cache, code_key in self.tile_resp.items():
-          for code, response in self.tile_resp[cache].items():
-            count = self.tile_maps[cache][code];
-            avg_response = response / float(count)
-            metricObjects.append( MetricObject( cache + "_response." + code, avg_response, "Avg Response Time per minute" ) )
+        self.record_metric(metricObjects, self.tile_maps, self.tile_resp)
+        self.record_metric(metricObjects, self.wms_maps, self.wms_resp)
 
         return metricObjects
+
+    def record_metric(self, metricObjects, countDict, responseDict):
+        for cache, code_key in countDict.items():
+            for code, count in countDict[cache].items():
+                metricObjects.append( MetricObject( cache + "_count." + code, count, "Responses per minute" ) )
+        for cache, code_key in responseDict.items():
+            for code, response in responseDict[cache].items():
+                count = countDict[cache][code]
+                avg_response = response / float(count)
+                metricObjects.append( MetricObject( cache + "_response." + code, avg_response, "Avg Response Time per minute" ) )
