@@ -49,6 +49,9 @@ class DMWebLogster(LogsterParser):
         self.mapproxyWms = {}
         self.mapproxyWmsResponse = {}
 
+        self.schoolsV1Mapproxy = {}
+        self.schoolsV1MapproxyResponse = {}
+
         # Regular expression for matching lines we are interested in, and capturing
         # fields from the line.
         self.regLogin = re.compile('.*GET /login.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
@@ -57,7 +60,7 @@ class DMWebLogster(LogsterParser):
         self.regDownloads = re.compile('.*POST (/roam/api/download/orders|/datadownload/submitorder).* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
         self.regMapproxy = re.compile('.*GET /mapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
         self.regMapproxyWms = re.compile('.*GET /mapproxy/wms/.*GetMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
-
+        self.regSchoolsV1Mapproxy = re.compile('.*GET /dfsmapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
 
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
@@ -72,6 +75,7 @@ class DMWebLogster(LogsterParser):
         regDownloadMatch = self.regDownloads.match(line)
         regMapproxyMatch = self.regMapproxy.match(line)
         regMapproxyWmsMatch = self.regMapproxyWms.match(line)
+        regSchoolsV1MapproxyMatch = self.regSchoolsV1Mapproxy.match(line)
 
         if regLoginMatch:
           linebits = regLoginMatch.groupdict()
@@ -91,6 +95,9 @@ class DMWebLogster(LogsterParser):
         elif regMapproxyWmsMatch:
           linebits = regMapproxyWmsMatch.groupdict()
           self.populate(self.mapproxyWms, self.mapproxyWmsResponse, linebits)
+        elif regSchoolsV1MapproxyMatch:
+          linebits = regSchoolsV1MapproxyMatch.groupdict()
+          self.populate(self.schoolsV1Mapproxy, self.schoolsV1MapproxyResponse, linebits)
         # ignore non-matching lines
 
     def populate(self, countDict, responseDict, linebits):
@@ -114,6 +121,7 @@ class DMWebLogster(LogsterParser):
         self.record_metric(metricObjects, self.downloads, self.downloadsResponse, "download_submit", "Download Submits per minute")
         self.record_metric(metricObjects, self.mapproxy, self.mapproxyResponse, "mapproxy", "Mapproxy tiles per minute")
         self.record_metric(metricObjects, self.mapproxyWms, self.mapproxyWmsResponse, "mapproxy_wms", "Mapproxy WMS requests per minute")
+        self.record_metric(metricObjects, self.schoolsV1Mapproxy, self.schoolsV1MapproxyResponse, "schools_v1_mapproxy", "Schools V1 Mapproxy tiles per minute")
 
         return metricObjects
 
