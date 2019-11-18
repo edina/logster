@@ -58,9 +58,9 @@ class DMWebLogster(LogsterParser):
         self.regLoginApi = re.compile('.*POST /roam/api/schools/login.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
         self.regRegister = re.compile('.*PUT /api/user/register HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
         self.regDownloads = re.compile('.*POST (/roam/api/download/orders|/datadownload/submitorder).* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
-        self.regMapproxy = re.compile('.*GET /mapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
+        self.regMapproxy = re.compile('.*GET /mapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d|-]+ .$')
         self.regMapproxyWms = re.compile('.*GET /mapproxy/wms/.*GetMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
-        self.regSchoolsV1Mapproxy = re.compile('.*GET /dfsmapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d-]+ .$')
+        self.regSchoolsV1Mapproxy = re.compile('.*GET /dfsmapproxy/wmsMap.* HTTP/\d.\d" (?P<code>\d+) .* (?P<response>\d+) [\w\d|-]+ .$')
 
     def parse_line(self, line):
         '''This function should digest the contents of one line at a time, updating
